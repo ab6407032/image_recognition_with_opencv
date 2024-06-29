@@ -1,40 +1,30 @@
 import cv2
-import numpy as np
-import helpers as hl
+import argparse
 
-#load image from a file
-image = cv2.imread('sample.jpg')
+def detect_faces(image_path, cascade_path):
+    # Load the image
+    image = cv2.imread(image_path)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-# Get screen dimensions
-screen_width, screen_height = hl.get_screen_dimensions()
+    # Load the Haar Cascade file
+    face_cascade = cv2.CascadeClassifier(cascade_path)
 
-# Resize the image
-resized_image = hl.resize_image(image, screen_width, screen_height)
+    # Detect faces
+    faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-#display image in a window
-#cv2.imshow("Loaded Image", resized_image)
-#cv2.waitKey(0) #wait untill a key is pressed
-#cv2.destroyAllWindows()
+    # Draw rectangles around the faces
+    for (x, y, w, h) in faces:
+        cv2.rectangle(image, (x, y), (x+w, y+h), (255, 0, 0), 2)
 
-#convert the image to grayscale
-gray_image = cv2.cvtColor(resized_image, cv2.COLOR_BGR2GRAY)
+    # Display the output
+    cv2.imshow('Detected Faces', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-#reduce noise with gaussian blur filter 
-blurred_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
-
-#edge detection using canny
-edges = cv2.Canny(blurred_image, 50, 150)
-
-# Load the Haar cascade file for face detection
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-
-#detect faces in image
-faces = face_cascade.detectMultiScale(gray_image, scaleFactor = 1.1, minNeighbors = 5, minSize = (30, 30))
-
-#draw rectangle around faces
-for(x, y, w, h) in faces:
-    cv2.rectangle(resized_image, (x, y), (x+w, y+h), (255, 0, 0), 2)
-
-cv2.imshow("Detected Faces", resized_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Face detection using Haar cascades.")
+    parser.add_argument("--image", required=True, help="Path to the input image.")
+    parser.add_argument("--cascade", default="haarcascade_frontalface_default.xml", help="Path to the Haar cascade file.")
+    args = parser.parse_args()
+    
+    detect_faces(args.image, args.cascade)
